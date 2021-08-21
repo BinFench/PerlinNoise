@@ -10,6 +10,7 @@ from collections import namedtuple
 import math
 import random
 import numpy
+import copy
 
 class noiseGenerator:
     """
@@ -19,11 +20,11 @@ class noiseGenerator:
     def __init__(self, numDim, gridLength, gridSize = 10,
                  userSeed = random.randint(0,65535)):
         """Constructor"""
-        self.isProcessed = False #To save on computation
+        self.isProcessed = False # To save on computation
         self.dimensions = numDim
-        self.noiseMap = numpy.empty([gridLength*gridSize] * numDim) #Gen. noise here
-        self.blockMap = numpy.empty([gridSize + 1] * numDim) #grid on map
-        self.seed = userSeed #Seed for random number generator
+        self.noiseMap = numpy.empty([gridLength[i]*gridSize for i in range(self.dimensions)]) # Gen. noise here
+        self.blockMap = numpy.empty([gridSize + 1] * numDim) # grid on map
+        self.seed = userSeed # Seed for random number generator
         self.gridLength = gridLength
         self.gridSize = gridSize
         random.seed(userSeed)
@@ -37,92 +38,155 @@ class noiseGenerator:
         self.initGrid()
         
     def initGrid(self):
-        """Initialize the vectors on each grid edge"""
-        blockTrav = self.blockMap
-        #Begin by iterating through each grid edge
-        for i in range((self.gridSize + 1) ** self.numDim):
-            #iterate through each dimension of given edge
-            for j in range(self.numDim):
-                #Determine the index of the edge for given dimension
-                coordinate = (i / ((self.gridSize + 1) ** j)) % (self.gridSize + 1)
-                #If all dimensions haven't been indexed, traverse to next dim
-                if (j != self.numDim - 1):
-                    blockTrav = blockTrav[coordinate]
-                #If all dimensions are indexed, encode unit vector on edge
-                else:
-                    blockTrav[coordinate] = 0
-                    #n dimension unit vector is encoded as scalar
-                    for k in range(self.numDim):
-                        blockTrav[coordinate] += random.randint(0, 999) * (1000 ** k)
+        dimEdges = self.gridLength[0] + 1
+        for i in range(dimEdges):
+            self.setEdge([i])
                 
     def f(self, coordinates):
         """Find the noise at the specified point"""
         assert(self.dimensions == len(coordinates)), """number of dimensions 
         and coordinates mismatch"""
-        modCoordinates = [0] * len(coordinates) #Location in local gridspace
-        gradCoordinates = [0] * len(coordinates) #Index of local grid edge
-        smoothCoeff = [0] * len(coordinates) #Smooth coefficient for weighted ave
+        modCoordinates = [0] * len(coordinates) # Location in local gridspace
+        gradCoordinates = [0] * len(coordinates) # Index of local grid edge
+        smoothCoeff = [0] * len(coordinates) # Smooth coefficient for weighted ave
         for i in range(len(coordinates)):
             modCoordinates[i] = coordinates[i] % self.gridSize
             gradCoordinates[i] = coordinates[i] / self.gridSize
-            smoothCoeff[i] = 3*(float(modCoordinates[i]/self.gridSize))**2 
+            # smoothCoeff = 3x^2 - 2x^3 (scalar smoothing function)
+            smoothCoeff[i] = 3*(float(modCoordinates[i]/self.gridSize))**2 \
             - 2*(float(modCoordinates[i]/self.gridSize))**3
-        #Now we perform dot product using the gradient index and 
-        #the displacement vector
-        dotProducts = [0] * (2 ** self.numDim)
-        adjacencies = [0] * (2 ** (self.numDim - 1))
+        # Now we perform dot product using the gradient index and 
+        # the displacement vector
+        dotProducts = [0] * (2 ** self.dimensions)
+        adjacencies = [0] * (2 ** (self.dimensions - 1))
         dispVector = [0] * len(coordinates)
         gradVector = [0] * len(coordinates)
         gradScalar = 0
         
-        for i in range(2 ** self.numDim):
+        for i in range(2 ** self.dimensions):
             if (i > 0):
-                for j in range(2 ** (self.numDim - 1) - 1):
+                # Boolean counter from 0 to 2^(dims - 1)
+                # Used to get the vectors for each 
+                # edge of the n-dim hypercube
+                for j in range(2 ** (self.dimensions - 1) - 1):
                     if (adjacencies[j] == 0):
                         adjacencies[j] = 1
                         break
                     else:
                         adjacencies[j] = 0
                         
+            # Traverse the blockmap by each coordinate
+            # Based on above counter, check adjacent coordinate
             for j in range(len(adjacencies)):
                 if (j == 0):
-                    gradScalar = self.blockMap[gradCoordinates[0] + adjacencies[0]]
+                    gradScalar = self.blockMap[int(gradCoordinates[0] + adjacencies[0])]
                 else:
-                    gradScalar = gradScalar[gradCoordinates[j] + adjacencies[j]]
+                    gradScalar = gradScalar[int(gradCoordinates[j] + adjacencies[j])]
+
                 if (adjacencies[j] == 1):
                     dispVector[j] = (self.gridSize - modCoordinates[j])/float(self.gridSize)
                 else:
                     dispVector[j] = modCoordinates[j]/float(self.gridSize)
                     
-            if (self.numDim > 1):
-                unit = 0
+            if (self.dimensions > 1):
+                # Normalize vectors
+                gradUnit = 0
+                dispUnit = 0
                 for j in range(len(gradVector)):
-                    gradVector[j] = ((gradScalar / 1000 ** j)
-                    - (gradScalar / 1000 ** (j + 1)) * 1000)
-                    - 499.5
-                    unit += gradVector[j] ** 2
+                    curVec = int(gradScalar / 1000 ** j)
+                    nextVec = int(gradScalar / 1000 ** (j + 1)) * 1000.0
+                    gradVector[j] = curVec - nextVec - 499.5
+                    gradUnit += gradVector[j] ** 2
+                    dispUnit += dispVector[j] ** 2
             
-                unit = unit ** 0.5
+                gradUnit = gradUnit ** 0.5
+                dispUnit = dispUnit ** 0.5
             
                 for j in range(len(gradVector)):
-                    gradVector[j] /= float(unit)
+                    gradVector[j] /= gradUnit
+                    if (dispUnit != 0):
+                        dispVector[j] /= dispUnit
                     
             else:
                 gradVector[0] = (gradScalar - 499.5)/499.5
                 
             dotProducts[i] = numpy.dot(dispVector, gradVector)
             
-        subWeights = [[0 for i in range(2**(self.numDim - 1))] for j in range(self.numDim)]
-        for i in range(self.numDim):
-            for j in range(2**(self.numDim - 1)):
-                subWeights[j][i] = 0
+        subWeights = [[0 for i in range(2**(self.dimensions - 1))] for j in range(self.dimensions)]
+        for i in range(self.dimensions):
+            for j in range(2**(self.dimensions - i - 1)):
+                if (i == 0):
+                    subWeights[i][j] = smoothCoeff[0]*dotProducts[2*j + 1] + (1-smoothCoeff[0])*dotProducts[2*j]
+                else:
+                    subWeights[i][j] = smoothCoeff[i]*subWeights[i-1][2*j+1] + (1-smoothCoeff[i])*subWeights[i-1][2*j]
 				
-		#TODO: Weighted average of n dimension dot products
+        noise = subWeights[self.dimensions - 1][0]
+        if (noise > 0):
+            return 6*noise**5 - 15*noise**4 + 10*noise**3
+        else:
+            return -(6*abs(noise)**5 - 15*abs(noise)**4 + 10*abs(noise)**3)
+
+    def setMap(self, coords):
+        """Recursively populate the noise map"""
+        # The coords argument may be incomplete, and we 
+        # use recursion to span the entire n-dim space
+        if (len(coords) == self.dimensions):
+            # Unpack the noisemap
+            curMap = self.noiseMap
+            for i in range(len(coords)):
+                if (i != len(coords) - 1):
+                    curMap = curMap[coords[i]]
+                else:
+                    curMap[coords[i]] = self.f(coords)
+        
+        else:
+            # Build the coordinates
+            dimCoords = self.gridLength[len(coords)]*self.gridSize
+            for i in range(dimCoords):
+                temp = copy.deepcopy(coords)
+                temp.append(i)
+                self.setMap(temp)
+
+    def setEdge(self, coords):
+        """Recursively populate the edge map"""
+        # The coords argument may be incomplete, and we 
+        # use recursion to span the entire n-dim space
+        if (len(coords) == self.dimensions):
+            # Unpack the noisemap
+            curMap = self.blockMap
+            for i in range(len(coords)):
+                if (i != len(coords) - 1):
+                    curMap = curMap[coords[i]]
+                else:
+                    curMap[coords[i]] = 0
+                    for j in range(self.dimensions):
+                        curMap[coords[i]] += random.randint(0, 999) * (1000 ** j)
+        
+        else:
+            # Build the coordinates
+            dimCoords = self.gridLength[len(coords)] + 1
+            for i in range(dimCoords):
+                temp = copy.deepcopy(coords)
+                temp.append(i)
+                self.setEdge(temp)
                 
     def getMap(self):
-        if (self.isProcessed): 
-            return self.noiseMap
-        
-        self.isProcessed = True
-        numSquares = max(self.lengths)/self.gridSize
-        
+        """Return the generated noise map"""
+        if (not self.isProcessed):
+            self.isProcessed = True
+            dimCoords = self.gridLength[0]*self.gridSize
+            for i in range(dimCoords):
+                self.setMap([i])
+        return self.noiseMap
+
+
+if __name__ == "__main__":
+    import matplotlib.pyplot as plt
+    # gen = noiseGenerator(1, [10])
+    # nmap = gen.getMap()
+    # plt.plot(nmap)
+    # plt.show()
+    gen = noiseGenerator(2, [10,10])
+    nmap = gen.getMap()
+    plt.imshow(nmap, cmap='hot', interpolation='nearest')
+    plt.show()
