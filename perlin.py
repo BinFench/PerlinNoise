@@ -23,7 +23,7 @@ class noiseGenerator:
         self.isProcessed = False # To save on computation
         self.dimensions = numDim
         self.noiseMap = numpy.empty([gridLength[i]*gridSize for i in range(self.dimensions)]) # Gen. noise here
-        self.blockMap = numpy.empty([gridSize + 1] * numDim) # grid on map
+        self.blockMap = numpy.empty([gridLength[i] + 1 for i in range(self.dimensions)]) # grid on map
         self.seed = userSeed # Seed for random number generator
         self.gridLength = gridLength
         self.gridSize = gridSize
@@ -58,9 +58,9 @@ class noiseGenerator:
         # Now we perform dot product using the gradient index and 
         # the displacement vector
         dotProducts = [0] * (2 ** self.dimensions)
-        adjacencies = [0] * (2 ** (self.dimensions - 1))
-        dispVector = [0] * len(coordinates)
-        gradVector = [0] * len(coordinates)
+        adjacencies = [0] * self.dimensions
+        dispVector = [0] * self.dimensions
+        gradVector = [0] * self.dimensions
         gradScalar = 0
         
         for i in range(2 ** self.dimensions):
@@ -68,7 +68,7 @@ class noiseGenerator:
                 # Boolean counter from 0 to 2^(dims - 1)
                 # Used to get the vectors for each 
                 # edge of the n-dim hypercube
-                for j in range(2 ** (self.dimensions - 1) - 1):
+                for j in range(self.dimensions):
                     if (adjacencies[j] == 0):
                         adjacencies[j] = 1
                         break
@@ -77,7 +77,7 @@ class noiseGenerator:
                         
             # Traverse the blockmap by each coordinate
             # Based on above counter, check adjacent coordinate
-            for j in range(len(adjacencies)):
+            for j in range(self.dimensions):
                 if (j == 0):
                     gradScalar = self.blockMap[int(gradCoordinates[0] + adjacencies[0])]
                 else:
@@ -176,6 +176,7 @@ class noiseGenerator:
             self.isProcessed = True
             dimCoords = self.gridLength[0]*self.gridSize
             for i in range(dimCoords):
+                print("%d/%d" % (i + 1, dimCoords))
                 self.setMap([i])
         return self.noiseMap
 
