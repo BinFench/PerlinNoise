@@ -1,13 +1,10 @@
-# -*- coding: utf-8 -*-
 """
-Created on Sat Jul 13 11:28:49 2019
+Created on Sat Jul 13 2019
 
 @author: Ben Finch
 https://adrianb.io/2014/08/09/perlinnoise.html
 """
 
-from collections import namedtuple
-import math
 import random
 import numpy
 import copy
@@ -183,11 +180,40 @@ class noiseGenerator:
 
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
-    # gen = noiseGenerator(1, [10])
-    # nmap = gen.getMap()
-    # plt.plot(nmap)
-    # plt.show()
-    gen = noiseGenerator(2, [10,10])
+    gen = noiseGenerator(2, [20, 20], 5)
     nmap = gen.getMap()
+    for i in range(100):
+        for j in range(100):
+            if (not (i % 5 == 0 or j % 5  == 0)):
+                continue
+            avg = 0
+            
+            coords = [(i-1, j-1), (i, j-1), (i+1, j-1),
+                      (i-1, j),             (i+1, j),
+                      (i-1, j+1), (i, j+1), (i+1, j+1)]
+
+            coords = list(filter((lambda coord : coord[0] >= 0 and coord[0] <= 99 and coord[1] >= 0 and coord[1] <= 99 and \
+                                not(coord[0] % 5 == 0 or coord[1] % 5 == 0)), coords))
+
+            for coord in coords:
+                avg += nmap[coord[0]][coord[1]]/len(coords)
+
+            nmap[i][j] = avg
+
+    for i in range(100):
+        for j in range(100):
+            avg = 0
+            
+            coords = [(i-1, j-1), (i, j-1), (i+1, j-1),
+                      (i-1, j),             (i+1, j),
+                      (i-1, j+1), (i, j+1), (i+1, j+1)]
+
+            coords = list(filter((lambda coord : coord[0] >= 0 and coord[0] <= 99 and coord[1] >= 0 and coord[1] <= 99), coords))
+
+            for coord in coords:
+                avg += nmap[coord[0]][coord[1]]/len(coords)
+
+            nmap[i][j] = avg
+
     plt.imshow(nmap, cmap='hot', interpolation='nearest')
     plt.show()
