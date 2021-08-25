@@ -173,7 +173,6 @@ class noiseGenerator:
             self.isProcessed = True
             dimCoords = self.gridLength[0]*self.gridSize
             for i in range(dimCoords):
-                print("%d/%d" % (i + 1, dimCoords))
                 self.setMap([i])
         return self.noiseMap
 
