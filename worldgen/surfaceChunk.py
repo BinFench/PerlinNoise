@@ -1,11 +1,12 @@
 from ursina import *
+from chunk import Chunk
 
-class SurfaceChunk():
+class SurfaceChunk(Chunk):
 	def __init__(self, position = (0,0), neighbours = []):
+		super.__init__(self, (position[0], 0, position[1]))
 		self.position = position
 		self.gen = noiseGenerator(2, [2, 2], 5)
 		self.nmap = self.gen.getMap()
-		self.voxels = []
 		self.neighbours = [[[False, None] for i in range(3)] for j in range(3)]
 		self.corners = [[False for i in range(2)] for i in range(2)]
 		self.neighbours[1][1] = [True, self]
@@ -105,20 +106,16 @@ class SurfaceChunk():
 							for h in range(int(leftSquare[i][j]*1.5)):
 								if (j < 4 and npos[1] == 2):
 									#Voxels on current chunk
-									self.voxels.append(Voxel((i + 16*position[0] - 5, h, j + 16*position[1] + 5)))
-									self.voxels[-1].chunk = self
+									self.addVoxel(Voxel((i + 3, h, j + 12)))
 								elif (j > 3 and npos[1] == 0):
 									#Voxels on current chunk
-									self.voxels.append(Voxel((i + 16*position[0] - 5, h, j + 16*position[1] - 8)))
-									self.voxels[-1].chunk = self
+									self.addVoxel(Voxel((i + 3, h, j - 4)))
 								elif (j < 4 and npos[1] == 0):
 									#Voxels on neighbour chunk
-									neighbour[1].voxels.append(Voxel((i + 16*neighbour[1].position[0] - 5, h, j + 16*neighbour[1].position[1] - 8)))
-									neighbour[1].voxels[-1].chunk = self
+									neighbour[1].addVoxel(Voxel((i + 3, h, j + 12)))
 								else:
 									#Voxels on neighbour chunk
-									neighbour[1].voxels.append(Voxel((i + 16*neighbour[1].position[0] - 5, h, j + 16*neighbour[1].position[1] + 5)))
-									neighbour[1].voxels[-1].chunk = self
+									neighbour[1].addVoxel(Voxel((i + 3, h, j - 4)))
 
 					# Place rightsquare heatmap
 					for i in range(5):
@@ -128,20 +125,16 @@ class SurfaceChunk():
 							for h in range(int(rightSquare[i][j]*1.5)):
 								if (j < 4 and npos[1] == 2):
 									#Voxels on current chunk
-									self.voxels.append(Voxel((i + 16*position[0], h, j + 16*position[1] + 5)))
-									self.voxels[-1].chunk = self
+									self.addVoxel(Voxel((i + 8, h, j + 12)))
 								elif (j > 3 and npos[1] == 0):
 									#Voxels on current chunk
-									self.voxels.append(Voxel((i + 16*position[0], h, j + 16*position[1] - 8)))
-									self.voxels[-1].chunk = self
+									self.addVoxel(Voxel((i + 8, h, j - 4)))
 								elif (j < 4 and npos[1] == 0):
 									#Voxels on neighbour chunk
-									neighbour[1].voxels.append(Voxel((i + 16*neighbour[1].position[0], h, j + 16*neighbour[1].position[1] - 8)))
-									neighbour[1].voxels[-1].chunk = self
+									neighbour[1].addVoxel(Voxel((i + 8, h, j + 12)))
 								else:
 									#Voxels on neighbour chunk
-									neighbour[1].voxels.append(Voxel((i + 16*neighbour[1].position[0], h, j + 16*neighbour[1].position[1] + 5)))
-									neighbour[1].voxels[-1].chunk = self
+									neighbour[1].addVoxel(Voxel((i + 8, h, j - 4)))
 
 				elif (npos[1] == 1):
 					#Either left or right in x
@@ -169,20 +162,16 @@ class SurfaceChunk():
 							for h in range(int(downSquare[i][j]*1.5)):
 								if (i < 4 and npos[0] == 2):
 									#Voxels on current chunk
-									self.voxels.append(Voxel((i + 16*position[0] + 5, h, j + 16*position[1] - 5)))
-									self.voxels[-1].chunk = self
+									self.addVoxel(Voxel((i + 12, h, j + 3)))
 								elif (i > 3 and npos[0] == 0):
 									#Voxels on current chunk
-									self.voxels.append(Voxel((i + 16*position[0] - 8, h, j + 16*position[1] - 5)))
-									self.voxels[-1].chunk = self
+									self.addVoxel(Voxel((i - 4, h, j + 3)))
 								elif (i < 4 and npos[0] == 0):
 									#Voxels on neighbour chunk
-									neighbour[1].voxels.append(Voxel(i + 16*neighbour[1].position[0] - 8, h, j + 16*neighbour[1].position[1] - 5))
-									neighbour[1].voxels[-1].chunk = self
+									neighbour[1].addVoxel(Voxel(i + 12, h, j + 3))
 								else:
 									#Voxels on neighbour chunk
-									neighbour[1].voxels.append(Voxel((i + 16*neighbour[1].position[0] + 5, h, j + 16*neighbour[1].position[1] - 5)))
-									neighbour[1].voxels[-1].chunk = self
+									neighbour[1].addVoxel(Voxel((i - 4, h, j + 3)))
 
 					# Place upsquare heatmap
 					for i in range(8):
@@ -192,20 +181,16 @@ class SurfaceChunk():
 							for h in range(int(upSquare[i][j]*1.5)):
 								if (i < 4 and npos[0] == 2):
 									#Voxels on current chunk
-									self.voxels.append(Voxel((i + 16*position[0] + 5, h, j + 16*position[1])))
-									self.voxels[-1].chunk = self
+									self.addVoxel(Voxel((i + 12, h, j + 8)))
 								elif (i > 3 and npos[0] == 0):
 									#Voxels on current chunk
-									self.voxels.append(Voxel((i + 16*position[0] - 8, h, j + 16*position[1])))
-									self.voxels[-1].chunk = self
+									self.addVoxel(Voxel((i - 4, h, j + 8)))
 								elif (i < 4 and npos[0] == 0):
 									#Voxels on neighbour chunk
-									neighbour[1].voxels.append(Voxel((i + 16*neighbour[1].position[0] - 8, h, j + 16*neighbour[1].position[1])))
-									neighbour[1].voxels[-1].chunk = self
+									neighbour[1].addVoxel(Voxel((i + 12, h, j + 8)))
 								else:
 									#Voxels on neighbour chunk
-									neighbour[1].voxels.append(Voxel((i + 16*neighbour[1].position[0] + 5, h, j + 16*neighbour[1].position[1])))
-									neighbour[1].voxels[-1].chunk = self
+									neighbour[1].addVoxel(Voxel((i - 4, h, j + 8)))
 
 				else:
 					#Corner neighbour
@@ -233,66 +218,51 @@ class SurfaceChunk():
 							for h in range(int(square[i][j]*1.5)):
 								if (i < 4 and npos[0] == 2):
 									if (j < 4 and npos[1] == 2):
-										self.voxels.append(Voxel((i + 16*position[0] + 5, h, j + 16*position[1] + 5)))
-										self.voxels[-1].chunk = self
+										self.addVoxel(Voxel((i + 12, h, j + 12)))
 									elif (j > 3 and npos[1] == 0):
-										self.voxels.append(Voxel((i + 16*position[0] + 5, h, j + 16*position[1] - 12)))
-										self.voxels[-1].chunk = self
+										self.addVoxel(Voxel((i + 12, h, j - 4)))
 									elif (j < 4):
-										self.neighbours[1][0][1].voxels.append(Voxel((i + 16*self.neighbours[1][0][1].position[0] + 5, h, j + 16*self.neighbours[1][0][1].position[1] + 5)))
-										self.neighbours[1][0][1].voxels[-1].chunk = self
+										self.neighbours[1][0][1].addVoxel(Voxel((i, h, j + 12)))
 									else:
-										self.neighbours[1][2][1].voxels.append(Voxel((i + 16*self.neighbours[1][2][1].position[0] + 5, h, j + 16*self.neighbours[1][2][1].position[1] - 12)))
-										self.neighbours[1][2][1].voxels[-1].chunk = self
+										self.neighbours[1][2][1].addVoxel(Voxel((i, h, j - 4)))
 
 								elif (i > 3 and npos[0] == 0):
 									if (j < 4 and npos[1] == 2):
-										self.voxels.append(Voxel((i + 16*position[0] - 12, h, j + 16*position[1] + 5)))
-										self.voxels[-1].chunk = self
+										self.addVoxel(Voxel((i - 4, h, j + 12)))
 									elif (j > 3 and npos[1] == 0):
-										self.voxels.append(Voxel((i + 16*position[0] - 12, h, j + 16*position[1] - 12)))
-										self.voxels[-1].chunk = self
+										self.addVoxel(Voxel((i - 4, h, j - 4)))
 									elif (j < 4):
-										self.neighbours[1][0][1].voxels.append(Voxel((i + 16*self.neighbours[1][0][1].position[0] - 12, h, j + 16*self.neighbours[1][0][1].position[1] + 5)))
-										self.neighbours[1][0][1].voxels[-1].chunk = self
+										self.neighbours[1][0][1].addVoxel(Voxel((i + 9, h, j + 12)))
 									else:
-										self.neighbours[1][2][1].voxels.append(Voxel((i + 16*self.neighbours[1][2][1].position[0] - 12, h, j + 16*self.neighbours[1][2][1].position[1] - 12)))
-										self.neighbours[1][2][1].voxels[-1].chunk = self
+										self.neighbours[1][2][1].addVoxel(Voxel((i + 9, h, j - 4)))
 
 								elif (i < 4):
 									if (j < 4 and npos[1] == 2):
-										self.neighbours[0][1][1].voxels.append(Voxel((i + 16*self.neighbours[0][1][1].position[0] + 5, h, j + 16*self.neighbours[0][1][1].position[1] + 5)))
-										self.neighbours[0][1][1].voxels[-1].chunk = self
+										self.neighbours[0][1][1].addVoxel(Voxel((i + 12, h, j + 12)))
 									elif (j > 3 and npos[1] == 0):
-										self.neighbours[0][1][1].voxels.append(Voxel((i + 16*self.neighbours[0][1][1].position[0] + 5, h, j + 16*self.neighbours[0][1][1].position[1] - 12)))
-										self.neighbours[0][1][1].voxels[-1].chunk = self
+										self.neighbours[0][1][1].addVoxel(Voxel((i + 12, h, j - 4)))
 									elif (j < 4):
-										self.neighbours[0][0][1].voxels.append(Voxel((i + 16*self.neighbours[0][0][1].position[0] + 5, h, j + 16*self.neighbours[0][0][1].position[1] + 5)))
-										self.neighbours[0][0][1].voxels[-1].chunk = self
+										self.neighbours[0][0][1].addVoxel(Voxel((i + 12, h, j + 12)))
 									else:
-										self.neighbours[0][2][1].voxels.append(Voxel((i + 16*self.neighbours[0][2][1].position[0] + 5, h, j + 16*self.neighbours[0][2][1].position[1] - 12)))
-										self.neighbours[0][2][1].voxels[-1].chunk = self
+										self.neighbours[0][2][1].addVoxel(Voxel((i + 12, h, j - 4)))
 
 								else:
 									if (j < 4 and npos[1] == 2):
-										self.neighbours[2][1][1].voxels.append(Voxel((i + 16*self.neighbours[2][1][1].position[0] - 12, h, j + 16*self.neighbours[2][1][1].position[1] + 5)))
-										self.neighbours[2][1][1].voxels[-1].chunk = self
+										self.neighbours[2][1][1].addVoxel(Voxel((i - 4, h, j + 12)))
 									elif (j > 3 and npos[1] == 0):
-										self.neighbours[2][1][1].voxels.append(Voxel((i + 16*self.neighbours[2][1][1].position[0] - 12, h, j + 16*self.neighbours[2][1][1].position[1] - 12)))
-										self.neighbours[2][1][1].voxels[-1].chunk = self
+										self.neighbours[2][1][1].addVoxel(Voxel((i - 4, h, j - 4)))
 									elif (j < 4):
-										neighbour[1].voxels.append(Voxel((i + 16*neighbour[1].position[0] - 12, h, j + 16*neighbour[1].position[1] + 5)))
-										neighbour[1].voxels[-1].chunk = self
+										neighbour[1].addVoxel(Voxel((i - 4, h, j + 12)))
 									else:
-										neighbour[1].voxels.append(Voxel((i + 16*neighbour[1].position[0] - 12, h, j + 16*neighbour[1].position[1] - 12)))
-										neighbour[1].voxels[-1].chunk = self
+										neighbour[1].addVoxel(Voxel((i - 4, h, j - 4)))
+				neighbour[1].generateMesh()
+		self.generateMesh()
 		
 	def enable(self):
 		global player
 		self.toDisable = True
 		self.toEnable = False
-		for voxel in self.voxels:
-			voxel.enabled = True
+		self.enabled = True
 		for x in range(3):
 			for y in range(3):
 				if (x == 1 and y == 1):
@@ -320,5 +290,4 @@ class SurfaceChunk():
 	def disable(self):
 		self.toDisable = False
 		self.toEnable = True
-		for voxel in self.voxels:
-			voxel.enabled = False
+		self.enabled = False

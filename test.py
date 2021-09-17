@@ -1,7 +1,7 @@
 from ursina import *
 from ursina.prefabs.first_person_controller import FirstPersonController
-from perlin import noiseGenerator
-import numpy
+from worldgen import *
+from player import *
 
 app = Ursina()
 grass_texture = load_texture('assets/grass_block.png')

@@ -72,10 +72,15 @@ class Chunk(Button):
 				if block_pick == 2: self.addVoxel(Voxel(position = pos, texture = 'assets/stone_block.png'))
 				if block_pick == 3: self.addVoxel(Voxel(position = pos, texture = 'assets/brick_block.png'))
 				if block_pick == 4: self.addVoxel(Voxel(position = pos, texture = 'assets/dirt_block.png'))
+                self.generateMesh()
 
 			if key == 'left mouse down':
 				punch_sound.play()
-				
+                normal = mouse.normal
+                if (normal[0] > 0 or normal[1] > 0 or normal[2] > 0):
+                    pos = (pos[0] - normal[0], pos[1] - normal[1], pos[2] - normal[2])
+                self.removeVoxel(pos)
+                self.generateMesh()
                         
 def unitTriangle(tri, vertices, pos):
     v1 = vertices[tri[0]]
