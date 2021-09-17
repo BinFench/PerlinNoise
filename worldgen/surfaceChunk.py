@@ -52,11 +52,9 @@ class SurfaceChunk():
 		for i in range(10):
 			for j in range(10):
 				for h in range(int(self.nmap[i][j]*1.5)):
-					self.voxels.append(Voxel((i + 16*position[0] - 5, h, j + 16*position[1] - 5)))
-					self.voxels[-1].chunk = self
+					self.addVoxel(Voxel((i + 3, h, j + 3)))
 				for h in range(13):
-					self.voxels.append(Voxel((i + 16*position[0] - 5, -1 - h, j + 16*position[1] - 5), texture='assets/stone_block.png'))
-					self.voxels[-1].chunk = self
+					self.addVoxel(Voxel((i + 3, -1 - h, j + 3), texture='assets/stone_block.png'))
 
 		for i in range(2):
 			for j in range(2):
@@ -64,12 +62,10 @@ class SurfaceChunk():
 					for h in range(13):
 						if (i == 0):
 							for l in range(16):
-								self.voxels.append(Voxel((k + 16*position[0] - 8 + 13*j, -1 - h, l + 16*position[1] - 8), texture=stone_texture))
-								self.voxels[-1].chunk = self
+								self.addVoxel((Voxel((k + 13*j, -1 - h, l), texture='assets/stone_block.png'))
 						else:
 							for l in range(10):
-								self.voxels.append(Voxel((l + 16*position[0] - 5, -1 - h, k + 16*position[1] - 8 +  13*j), texture=stone_texture))
-								self.voxels[-1].chunk = self
+								self.addVoxel(Voxel((l + 3, -1 - h, k + 13*j), texture='assets/stone_block.png'))
 
 		for x in range(3):
 			for y in range(3):
@@ -81,7 +77,6 @@ class SurfaceChunk():
 					continue
 
 				npos = (x, y)
-				# self.neighbours[npos[0]][npos[1]] = [True, neighbour[1]]
 				nblocks = neighbour[1].gen.blockMap
 				blocks= None
 				bmap = self.gen.blockMap
