@@ -28,7 +28,7 @@ def getUV(tri, texture):
     v1 = tri[0]
     v2 = tri[1]
     v3 = tri[2]
-    off = singleWidth*(Texture[texture] - 1)
+    off = singleWidth*(Texture[texture].value - 1)
 
     if (v1 == (0,0,0)):
         if (v2 == (0,0,1) and v3 == (0,1,0)):
