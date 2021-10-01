@@ -5,6 +5,6 @@ class Sky(Entity):
 		super().__init__(
 			parent = scene,
 			model = 'sphere',
-			texture = sky_texture,
+			texture = load_texture('assets/skybox.png'),
 			scale = 10000,
 			double_sided = True)

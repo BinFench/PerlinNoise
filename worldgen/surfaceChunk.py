@@ -13,8 +13,6 @@ class SurfaceChunk(Chunk):
 		self.neighbours = [[[False, None] for i in range(3)] for j in range(3)]
 		self.corners = [[False for i in range(2)] for i in range(2)]
 		self.neighbours[1][1] = [True, self]
-		self.toDisable = True
-		self.toEnable = True
 		self.pos = position
 		self.chunks = globchunks
 

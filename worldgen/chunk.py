@@ -4,16 +4,22 @@ from utils.getTri import getTris
 from utils.textureMap import *
 from utils.getNormal import getNormal
 
+chunkTexture = load_texture('assets/textureMap.png')
+
 class Chunk(Button):
     def __init__(self, position = (0,0,0)):
         super().__init__(
             parent = scene,
             position = (16*position[0] - 8, 16*position[1] - 8, 16*position[2] - 8),
-            model = Mesh(),
-            texture = textureMap,
-            collider = 'mesh'
+            model = Mesh(mode='triangle'),
+            texture = chunkTexture,
+            collider = 'mesh',
+            collision = True,
+            double_sided = True
         )
         self.voxels = [[[None for z in range(16)] for y in range(16)] for x in range(16)]
+        self.toDisable = True
+        self.toEnable = True
         print("Chunk at: ", self.position)
 
     def generateMesh(self):
@@ -35,20 +41,25 @@ class Chunk(Button):
                     # and keeping track of them in the voxel.
                     vertBase = len(self.model.vertices)
                     self.voxels[x][y][z].vertices = []
-                    # verts = [(x + vertex[0], y + vertex[1], z + vertex[2]) for vertex in vertices]
-                    # i = 0
-                    # count = 0
-                    # for vertex in vertices:
-                    #     if (verts[count] not in self.model.vertices):
-                    #         self.model.vertices.append(verts[count])
-                    #         self.voxels[x][y][z].vertices.append(vertex)
-                    #         self.voxels[x][y][z].vertIndices.append(vertBase + i)
-                    #         i += 1
-                    #     count += 1
+                    verts = [(x + vertex[0], y + vertex[1], z + vertex[2]) for vertex in vertices]
+                    i = 0
+                    for vertex in vertices:
+                        self.model.vertices.append(verts[i])
+                        self.voxels[x][y][z].vertices.append(vertex)
+                        self.voxels[x][y][z].vertIndices.append(vertBase + i)
+                        i += 1
+                        self.model.uvs.append((0,0))
+                        self.model.normals.append((0,0,0))
                     # We now build the triangles and apply UVs and normals from the vertex indices
                     # They are also tracked in the voxel
                     triBase = len(self.model.triangles)
-                    tris = getTris(vertices)
+                    prevLen = len(vertices)
+                    tris = getTris(vertices, vertBase)
+                    diffLen = len(vertices) - prevLen
+                    for i in range(diffLen):
+                        self.model.vertices.append((x + vertices[prevLen + i][0], y + vertices[prevLen + i][1], z + vertices[prevLen + i][2]))
+                        self.model.uvs.append((0,0))
+                        self.model.normals.append((0,0,0))
                     count = 0
                     for tri in tris:
                         index = vertBase + count
@@ -57,16 +68,26 @@ class Chunk(Button):
                         self.voxels[x][y][z].triIndices.append(triBase + count)
                         triangle = unitTriangle(tri, self.model.vertices, (x,y,z))
                         uv = getUV(triangle, self.voxels[x][y][z].texture)
-                        self.model.uvs.append(uv[0])
-                        self.model.uvs.append(uv[1])
-                        self.model.uvs.append(uv[2])
+                        self.model.uvs[tri[0]] = uv[0]
+                        self.model.uvs[tri[1]] = uv[1]
+                        self.model.uvs[tri[2]] = uv[2]
                         self.voxels[x][y][z].uvs.append(uv)
                         self.voxels[x][y][z].uvIndices.append(triBase + count)
                         normal = getNormal(triangle)
-                        self.model.normals.append(normal)
+                        self.model.normals[tri[0]] = normal
+                        self.model.normals[tri[1]] = normal
+                        self.model.normals[tri[2]] = normal
                         self.voxels[x][y][z].normals.append(normal)
                         self.voxels[x][y][z].normalIndices.append(triBase + count)
                         count += 1
+        print(len(self.model.vertices), len(self.model.uvs), len(self.model.triangles), len(self.model.normals))
+        for tri in self.model.triangles:
+            print("Tri: ", tri)
+            print("#1: ", self.model.vertices[tri[0]], self.model.uvs[tri[0]], self.model.normals[tri[0]])
+            print("#2: ", self.model.vertices[tri[1]], self.model.uvs[tri[1]], self.model.normals[tri[1]])
+            print("#3: ", self.model.vertices[tri[2]], self.model.uvs[tri[2]], self.model.normals[tri[2]])
+        self.model.project_uvs()
+        self.model.colorize()
         self.model.generate()
 
     def addVoxel(self, voxel):
