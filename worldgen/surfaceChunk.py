@@ -13,7 +13,7 @@ class SurfaceChunk(Chunk):
 		self.neighbours = [[[False, None] for i in range(3)] for j in range(3)]
 		self.corners = [[False for i in range(2)] for i in range(2)]
 		self.neighbours[1][1] = [True, self]
-		self.pos = position
+		self.spos = position
 		self.chunks = globchunks
 
 		for neighbour in neighbours:
@@ -353,7 +353,7 @@ class SurfaceChunk(Chunk):
 		
 	def enable(self):
 		global player, chunks
-		print("Enabled: ", self.pos)
+		print("Enabled: ", self.spos)
 		self.toDisable = True
 		self.toEnable = False
 		self.enabled = True
@@ -370,7 +370,7 @@ class SurfaceChunk(Chunk):
 		# 			continue
 
 		# 		neighbour[0] = True
-		# 		neighbour[1] = SurfaceChunk((self.pos[0] + x - 1, self.pos[1] + y - 1), [[(2 - x, 2 - y), self]], globchunks = self.chunks)
+		# 		neighbour[1] = SurfaceChunk((self.spos[0] + x - 1, self.spos[1] + y - 1), [[(2 - x, 2 - y), self]], globchunks = self.chunks)
 		# 		self.chunks.append(neighbour[1])
 
 		# for x in range(2):
@@ -380,11 +380,11 @@ class SurfaceChunk(Chunk):
 		# 			continue
 
 		# 		neighbour[0] = True
-		# 		neighbour[1] = SurfaceChunk((self.pos[0] + 2*x - 1, self.pos[1] + 2*y - 1), [[(2 - 2*x, 2 - 2*y), self], [(2 - 2*x, 1), self.neighbours[1][y*2][1]], [(1, 2 - 2*y), self.neighbours[x*2][1][1]]], globchunks = self.chunks)
+		# 		neighbour[1] = SurfaceChunk((self.spos[0] + 2*x - 1, self.spos[1] + 2*y - 1), [[(2 - 2*x, 2 - 2*y), self], [(2 - 2*x, 1), self.neighbours[1][y*2][1]], [(1, 2 - 2*y), self.neighbours[x*2][1][1]]], globchunks = self.chunks)
 		# 		self.chunks.append(neighbour[1])
 
 	def disable(self):
-		print("Disabled: ", self.pos)
+		print("Disabled: ", self.spos)
 		self.toDisable = False
 		self.toEnable = True
 		self.enabled = False

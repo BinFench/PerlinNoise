@@ -2,13 +2,15 @@ from ursina import *
 from ursina.prefabs.first_person_controller import FirstPersonController
 
 app = Ursina()
+block_pick = 1
 
 from player.hand import Hand
 from worldgen.surfaceChunk import SurfaceChunk
 from worldgen.chunk import Chunk
 from worldgen.voxel import Voxel
+from worldgen.singleVoxel import SingleVoxel
+from worldgen.CubeMesh import CubeMesh
 
-block_pick = 1
 chunks = []
 player = FirstPersonController()
 
@@ -37,14 +39,15 @@ def update():
 		if (chunk.toDisable and distance_xz((chunk.position[0], 0, chunk.position[1]), player.world_position) > 23):
 			chunk.disable()
 
-singleBlock = Chunk(position=(0,0,0))
-singleBlock.addVoxel(Voxel(position=(8,15,8)))
-singleBlock.generateMesh()
-chunks.append(singleBlock)
-
-# chunks.append(SurfaceChunk((0,0), globchunks=chunks))
+# singleBlock = Chunk(position=(0,0,0))
+# singleBlock.addVoxel(Voxel(position=(8,15,8)))
+# singleBlock.generateMesh()
+# chunks.append(singleBlock)
+# SingleVoxel()
+chunks.append(SurfaceChunk((0,0), globchunks=chunks))
+# CubeMesh(position=(0,7,0))
 player.y = 8
-player.gravity = 0
+# player.gravity = 0
 sky = Sky()
 hand = Hand()
 app.run()
