@@ -1,6 +1,7 @@
 import numpy
 
 def terrainSquare(square, lengths):
+	# Generate a rectangular area of terrain
 	toRet = [[0 for i in range(lengths[1])] for j in range(lengths[0])]
 	for x in range(lengths[0]):
 		for y in range(lengths[1]):

@@ -1,4 +1,5 @@
 def getTris(vertices, vbase):
+    # For a set of vertices, generate every possible triangle on a cube
     tris = []
     usedVert = [[[False for i in range(2)] for j in range(2)] for k in range(2)]
     stop = len(vertices)
@@ -205,6 +206,3 @@ def getTris(vertices, vbase):
     
 def getIndex(vertex, vertices):
     return vertices.index(vertex)
-
-def nthIndex(l, elem, n):
-    return [i for i, m in enumerate(l) if m == elem][n-1]

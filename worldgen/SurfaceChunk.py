@@ -1,8 +1,8 @@
 from ursina import *
-from worldgen.chunk import Chunk
+from worldgen.Chunk import Chunk
 from worldgen.perlin import noiseGenerator
-from worldgen.voxel import Voxel
-from utils.terrainSquare import terrainSquare
+from worldgen.Voxel import Voxel
+from utils import *
 
 class SurfaceChunk(Chunk):
 	def __init__(self, position = (0,0), neighbours = [], globchunks = []):
@@ -352,8 +352,6 @@ class SurfaceChunk(Chunk):
 		return rescan
 		
 	def enable(self):
-		global player, chunks
-		print("Enabled: ", self.spos)
 		self.toDisable = True
 		self.toEnable = False
 		self.enabled = True
@@ -384,7 +382,6 @@ class SurfaceChunk(Chunk):
 		# 		self.chunks.append(neighbour[1])
 
 	def disable(self):
-		print("Disabled: ", self.spos)
 		self.toDisable = False
 		self.toEnable = True
 		self.enabled = False

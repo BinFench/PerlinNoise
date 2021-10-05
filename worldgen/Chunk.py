@@ -1,12 +1,14 @@
 from ursina import *
-from utils.checkNeighbourVoxels import checkNeighbourVoxels
-from utils.getTri import getTris
-from utils.textureMap import *
-from utils.getNormal import getNormal
-from worldgen.voxel import Voxel
+from utils import *
+from worldgen.Voxel import Voxel
 
 chunkTexture = load_texture('assets/textureMap.png')
 punch_sound = Audio('assets/punch_sound',loop = False, autoplay = False)
+block_pick = 0
+
+def set_block_pick(pick):
+    global block_pick
+    block_pick = pick
 
 class Chunk(Entity):
     def __init__(self, position = (0,0,0)):
@@ -88,62 +90,44 @@ class Chunk(Entity):
     def addVoxel(self, voxel):
         voxel.chunk = self
         pos = voxel.position
-        self.voxels[pos[0]][pos[1]][pos[2]] = voxel
+        if (pos[0] < 0 or pos[0] > 15 or pos[1] < 0 or  pos[1] > 15 or pos[2] < 0 or pos[2] > 15):
+            return False
+
+        toRet = self.voxels[pos[0]][pos[1]][pos[2]] is None
+        if (toRet):
+            self.voxels[pos[0]][pos[1]][pos[2]] = voxel
+        return toRet
 
     def removeVoxel(self, pos):
+        toRet = self.voxels[pos[0]][pos[1]][pos[2]] is not None
         self.voxels[pos[0]][pos[1]][pos[2]] = None
+        return toRet
 
     def input(self,key):
         global block_pick
         if self.hovered:
             pos = mouse.point
             pos = (int(pos[0]), int(pos[1]), int(pos[2]))
-            print(pos)
             if key == 'right mouse down':
-                print(pos)
                 punch_sound.play()
-                self.addVoxel(Voxel(position = pos, texture = 'assets/grass_block.png'))
-                # if block_pick == 1: self.addVoxel(Voxel(position = pos, texture = 'assets/grass_block.png'))
-                # if block_pick == 2: self.addVoxel(Voxel(position = pos, texture = 'assets/stone_block.png'))
-                # if block_pick == 3: self.addVoxel(Voxel(position = pos, texture = 'assets/brick_block.png'))
-                # if block_pick == 4: self.addVoxel(Voxel(position = pos, texture = 'assets/dirt_block.png'))
+                normal = mouse.normal
+                while (not self.addVoxel(Voxel(position = pos, texture = list(Texture)[block_pick].name))):
+                    if (normal[0] > 0 or normal[1] > 0 or normal[2] > 0):
+                        pos = (int(pos[0] - normal[0]), int(pos[1] - normal[1]), int(pos[2] - normal[2]))
+                    else:
+                        pos = (int(pos[0] + normal[0]), int(pos[1] + normal[1]), int(pos[2] + normal[2]))
+                    if (pos[0] < 0 or  pos[0] > 15 or pos[1] < 0 or  pos[1] > 15 or pos[2] < 0 or  pos[2] > 15):
+                        break
                 self.generateMesh()
 
             if key == 'left mouse down':
                 punch_sound.play()
                 normal = mouse.normal
-                if (normal[0] > 0 or normal[1] > 0 or normal[2] > 0):
-                    pos = (pos[0] - normal[0], pos[1] - normal[1], pos[2] - normal[2])
-                self.removeVoxel(pos)
-                print(pos)
+                while (not self.removeVoxel(pos)):
+                    if (normal[0] > 0 or normal[1] > 0 or normal[2] > 0):
+                        pos = (int(pos[0] - normal[0]), int(pos[1] - normal[1]), int(pos[2] - normal[2]))
+                    else:
+                        pos = (int(pos[0] + normal[0]), int(pos[1] + normal[1]), int(pos[2] + normal[2]))
+                    if (pos[0] < 0 or  pos[0] > 15 or pos[1] < 0 or  pos[1] > 15 or pos[2] < 0 or  pos[2] > 15):
+                        break
                 self.generateMesh()
-                        
-def unitTriangle(tri, vertices, pos):
-    v1 = vertices[tri[0]]
-    v2 = vertices[tri[1]]
-    v3 = vertices[tri[2]]
-    if (pos[0] == 1):
-        v1 = (v1[0] - 1, v1[1], v1[2])
-        v2 = (v2[0] - 1, v2[1], v2[2])
-        v3 = (v3[0] - 1, v3[1], v3[2])
-    if (pos[0] > 1):
-        v1 = (v1[0] % pos[0], v1[1], v1[2])
-        v2 = (v2[0] % pos[0], v2[1], v2[2])
-        v3 = (v3[0] % pos[0], v3[1], v3[2])
-    if (pos[1] == 1):
-        v1 = (v1[0], v1[1] - 1, v1[2])
-        v2 = (v2[0], v2[1] - 1, v2[2])
-        v3 = (v3[0], v3[1] - 1, v3[2])
-    if (pos[1] > 1):
-        v1 = (v1[0], v1[1] % pos[1], v1[2])
-        v2 = (v2[0], v2[1] % pos[1], v2[2])
-        v3 = (v3[0], v3[1] % pos[1], v3[2])
-    if (pos[2] == 1):
-        v1 = (v1[0], v1[1], v1[2] - 1)
-        v2 = (v2[0], v2[1], v2[2] - 1)
-        v3 = (v3[0], v3[1], v3[2] - 1)
-    if (pos[2] > 1):
-        v1 = (v1[0], v1[1], v1[2] % pos[2])
-        v2 = (v2[0], v2[1], v2[2] % pos[2])
-        v3 = (v3[0], v3[1], v3[2] % pos[2])
-    return (v1, v2, v3)

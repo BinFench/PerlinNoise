@@ -1,4 +1,5 @@
 def getNormal(tri):
+    # For a given unit triangle, return the respective normal on a cube
     v1 = tri[0]
     v2 = tri[1]
     v3 = tri[2]

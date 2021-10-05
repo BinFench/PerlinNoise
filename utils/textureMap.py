@@ -1,6 +1,5 @@
 from enum import Enum
 from PIL import Image
-from ursina import *
 
 grassBlock = Image.open('assets/grass_block.png')
 stoneBlock = Image.open('assets/stone_block.png')
@@ -87,4 +86,3 @@ def getUV(tri, texture):
             return ((0.375*singleWidthFrac + off, 0.25),
                     (0.625*singleWidthFrac + off, 0.5),
                     (0.625*singleWidthFrac + off, 0.25))
-    print((v1, v2, v3))
