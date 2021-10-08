@@ -8,12 +8,16 @@ from worldgen import *
 
 chunks = []
 player = FirstPersonController()
+count = 0
+
+def dist3D(p1, p2):
+	return ((p1[0]-p2[0])**2.0 + (p1[1]-p2[1])**2.0 + (p1[2]-p2[2])**2.0)**0.5
 
 # window.fps_counter.enabled = False
 window.exit_button.visible = False
 
 def update():
-	global block_pick, chunks, player
+	global block_pick, chunks, player, count
 
 	if held_keys['left mouse'] or held_keys['right mouse']:
 		hand.active()
@@ -26,14 +30,22 @@ def update():
 	if held_keys['4']: set_block_pick(3)
 	for i in range(len(chunks)):
 		chunk = chunks[i]
-		if (chunk.toEnable and distance_xz((chunk.position[0], 0, chunk.position[1]), player.world_position) <= 23):
-			chunk.toEnable = False
+		pos = (chunk.position[0] + 8, chunk.position[1] + 8, chunk.position[2] + 8)
+		if (dist3D(pos, player.world_position) <= 25):
 			chunk.enable()
-		if (chunk.toDisable and distance_xz((chunk.position[0], 0, chunk.position[1]), player.world_position) > 23):
+		else:
 			chunk.disable()
 
-chunks.append(SurfaceChunk((0,0), globchunks=chunks))
+	if (count == 3):
+		player.gravity = 1
+	elif (count < 3):
+		count += 1
+
+biome = Biome()
+
+SurfaceChunk(biome, (0,0), globchunks=chunks)
 player.y = 8
+player.gravity = 0
 mouse.visible = False
 player.cursor.visible = False
 sky = Sky()

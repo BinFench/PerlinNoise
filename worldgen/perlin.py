@@ -15,7 +15,7 @@ class noiseGenerator:
     """
     
     def __init__(self, numDim, gridLength, gridSize = 10,
-                 userSeed = random.randint(0,65535)):
+                 userSeed = 0):
         """Constructor"""
         self.isProcessed = False # To save on computation
         self.dimensions = numDim
@@ -24,7 +24,10 @@ class noiseGenerator:
         self.seed = userSeed # Seed for random number generator
         self.gridLength = gridLength
         self.gridSize = gridSize
-        random.seed(userSeed)
+        if (userSeed != 0):
+            random.seed(userSeed)
+        else:
+            random.seed(random.randint(0,65535))
         self.initGrid()
         
     def setSeed(self, userSeed):
@@ -179,11 +182,11 @@ class noiseGenerator:
 
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
-    gen = noiseGenerator(2, [20, 20], 5)
+    gen = noiseGenerator(2, [20, 20], 8)
     nmap = gen.getMap()
-    for i in range(100):
-        for j in range(100):
-            if (not (i % 5 == 0 or j % 5  == 0)):
+    for i in range(160):
+        for j in range(160):
+            if (not (i % 8 == 0 or j % 8  == 0)):
                 continue
             avg = 0
             
@@ -191,23 +194,23 @@ if __name__ == "__main__":
                       (i-1, j),             (i+1, j),
                       (i-1, j+1), (i, j+1), (i+1, j+1)]
 
-            coords = list(filter((lambda coord : coord[0] >= 0 and coord[0] <= 99 and coord[1] >= 0 and coord[1] <= 99 and \
-                                not(coord[0] % 5 == 0 or coord[1] % 5 == 0)), coords))
+            coords = list(filter((lambda coord : coord[0] >= 0 and coord[0] <= 159 and coord[1] >= 0 and coord[1] <= 159 and \
+                                not(coord[0] % 8 == 0 or coord[1] % 8 == 0)), coords))
 
             for coord in coords:
                 avg += nmap[coord[0]][coord[1]]/len(coords)
 
             nmap[i][j] = avg
 
-    for i in range(100):
-        for j in range(100):
+    for i in range(160):
+        for j in range(160):
             avg = 0
             
             coords = [(i-1, j-1), (i, j-1), (i+1, j-1),
                       (i-1, j),             (i+1, j),
                       (i-1, j+1), (i, j+1), (i+1, j+1)]
 
-            coords = list(filter((lambda coord : coord[0] >= 0 and coord[0] <= 99 and coord[1] >= 0 and coord[1] <= 99), coords))
+            coords = list(filter((lambda coord : coord[0] >= 0 and coord[0] <= 159 and coord[1] >= 0 and coord[1] <= 159), coords))
 
             for coord in coords:
                 avg += nmap[coord[0]][coord[1]]/len(coords)

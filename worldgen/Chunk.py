@@ -14,9 +14,6 @@ class Chunk(Entity):
     def __init__(self, position = (0,0,0)):
         self.pos = position
         self.voxels = [[[None for z in range(16)] for y in range(16)] for x in range(16)]
-        self.toDisable = True
-        self.toEnable = True
-        print("Chunk at: ", self.pos)
 
     def generateMesh(self):
         # First, we make a pass generating all the vertices and assigning them to voxels
@@ -99,6 +96,8 @@ class Chunk(Entity):
         return toRet
 
     def removeVoxel(self, pos):
+        if (pos[0] < 0 or pos[0] > 15 or pos[1] < 0 or  pos[1] > 15 or pos[2] < 0 or pos[2] > 15):
+            return False
         toRet = self.voxels[pos[0]][pos[1]][pos[2]] is not None
         self.voxels[pos[0]][pos[1]][pos[2]] = None
         return toRet
