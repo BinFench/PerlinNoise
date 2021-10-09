@@ -1,6 +1,6 @@
 from ursina import *
 from worldgen.Chunk import Chunk
-from worldgen.Voxel import Voxel
+from worldgen.blocks import *
 from worldgen.Biome import Biome
 
 class SurfaceChunk(Chunk):
@@ -24,11 +24,11 @@ class SurfaceChunk(Chunk):
 			for j in range(16):
 				for h in range(int(self.nmap[i][j]*1.5)):
 					if (h == int(self.nmap[i][j]*1.5) - 1):
-						self.addVoxel(Voxel((i, h + 11, j)))
+						self.addVoxel(GrassBlock((i, h + 11, j)))
 					else:
-						self.addVoxel(Voxel((i, h + 11, j), texture='assets/dirt_block.png'))
+						self.addVoxel(DirtBlock((i, h + 11, j)))
 				for h in range(11):
-					self.addVoxel(Voxel((i, h, j), texture='assets/stone_block.png'))
+					self.addVoxel(StoneBlock((i, h, j)))
 
 		self.generateMesh()
 		self.propogateNeighbours()

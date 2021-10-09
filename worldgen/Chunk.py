@@ -1,6 +1,6 @@
 from ursina import *
 from utils import *
-from worldgen.Voxel import Voxel
+from worldgen.blocks import *
 
 chunkTexture = load_texture('assets/textureMap.png')
 punch_sound = Audio('assets/punch_sound',loop = False, autoplay = False)
@@ -74,6 +74,9 @@ class Chunk(Entity):
                         self.voxels[x][y][z].normals.append(normal)
                         self.voxels[x][y][z].normalIndices.append(triBase + count)
                         count += 1
+        self.initMesh(fvertices, triangles, normals, uvs)
+
+    def initMesh(self, fvertices, triangles, normals, uvs):
         super().__init__(
             parent = scene,
             position = (16*self.pos[0] - 8, 16*self.pos[1] - 8, 16*self.pos[2] - 8),
@@ -110,7 +113,7 @@ class Chunk(Entity):
             if key == 'right mouse down':
                 punch_sound.play()
                 normal = mouse.normal
-                while (not self.addVoxel(Voxel(position = pos, texture = list(Texture)[block_pick].name))):
+                while (not self.addVoxel(pickBlock(block_pick)(position=pos))):
                     if (normal[0] > 0 or normal[1] > 0 or normal[2] > 0):
                         pos = (int(pos[0] - normal[0]), int(pos[1] - normal[1]), int(pos[2] - normal[2]))
                     else:
