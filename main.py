@@ -9,12 +9,15 @@ from worldgen import *
 chunks = []
 player = FirstPersonController()
 count = 0
+player.y = 8
+player.gravity = 0
+mouse.visible = False
+player.cursor.visible = False
+sky = Sky()
+hand = Hand()
 
 def dist3D(p1, p2):
 	return ((p1[0]-p2[0])**2.0 + (p1[1]-p2[1])**2.0 + (p1[2]-p2[2])**2.0)**0.5
-
-# window.fps_counter.enabled = False
-window.exit_button.visible = False
 
 def update():
 	global block_pick, chunks, player, count
@@ -41,13 +44,13 @@ def update():
 	elif (count < 3):
 		count += 1
 
-biome = Biome()
+def run():
+	# window.fps_counter.enabled = False
+	window.exit_button.visible = False
 
-SurfaceChunk(biome, (0,0), globchunks=chunks)
-player.y = 8
-player.gravity = 0
-mouse.visible = False
-player.cursor.visible = False
-sky = Sky()
-hand = Hand()
-app.run()
+	biome = Biome()
+
+	SurfaceChunk(biome, (0,0), globchunks=chunks)
+	app.run()
+
+run()

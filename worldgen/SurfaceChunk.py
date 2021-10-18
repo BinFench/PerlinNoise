@@ -24,11 +24,11 @@ class SurfaceChunk(Chunk):
 			for j in range(16):
 				for h in range(int(self.nmap[i][j]*1.5)):
 					if (h == int(self.nmap[i][j]*1.5) - 1):
-						self.addVoxel(GrassBlock((i, h + 11, j)))
+						self.addVoxel(GrassBlock(position=(i, h + 11, j), chunk=self))
 					else:
-						self.addVoxel(DirtBlock((i, h + 11, j)))
+						self.addVoxel(DirtBlock(position=(i, h + 11, j), chunk=self))
 				for h in range(11):
-					self.addVoxel(StoneBlock((i, h, j)))
+					self.addVoxel(StoneBlock(position=(i, h, j), chunk=self))
 
 		self.generateMesh()
 		self.propogateNeighbours()

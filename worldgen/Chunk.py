@@ -14,67 +14,27 @@ class Chunk(Entity):
     def __init__(self, position = (0,0,0)):
         self.pos = position
         self.voxels = [[[None for z in range(16)] for y in range(16)] for x in range(16)]
+        self.vertices = []
+        self.triangles = []
+        self.uvs = []
+        self.normals = []
+        self.generated = False
 
     def generateMesh(self):
-        # First, we make a pass generating all the vertices and assigning them to voxels
-        fvertices = []
-        triangles = []
-        uvs = []
-        normals = []
+        self.vertices = []
+        self.triangles = []
+        self.uvs = []
+        self.normals = []
+        vbase = 0
         for x in range(16):
             for y in range(16):
                 for z in range(16):
                     if (self.voxels[x][y][z] is None):
                         continue
+                    vbase = self.voxels[x][y][z].getMesh(vbase)
 
-                    self.voxels[x][y][z].clearGeometry()
-                    vertices = checkNeighbourVoxels(x, y, z, self.voxels)
-                        
-                    # The vertices are filtered.  We can now shape and texture the mesh
-                    # Begin by appending the vertices to the model,
-                    # and keeping track of them in the voxel.
-                    vertBase = len(fvertices)
-                    self.voxels[x][y][z].vertices = []
-                    verts = [(x + vertex[0], y + vertex[1], z + vertex[2]) for vertex in vertices]
-                    i = 0
-                    for vertex in vertices:
-                        fvertices.append(verts[i])
-                        self.voxels[x][y][z].vertices.append(vertex)
-                        self.voxels[x][y][z].vertIndices.append(vertBase + i)
-                        i += 1
-                        uvs.append((0,0))
-                        normals.append((0,0,0))
-                    # We now build the triangles and apply UVs and normals from the vertex indices
-                    # They are also tracked in the voxel
-                    triBase = len(triangles)
-                    prevLen = len(vertices)
-                    tris = getTris(vertices, vertBase)
-                    diffLen = len(vertices) - prevLen
-                    for i in range(diffLen):
-                        fvertices.append((x + vertices[prevLen + i][0], y + vertices[prevLen + i][1], z + vertices[prevLen + i][2]))
-                        uvs.append((0,0))
-                        normals.append((0,0,0))
-                    count = 0
-                    for tri in tris:
-                        index = vertBase + count
-                        triangles.append(tri)
-                        self.voxels[x][y][z].triangles.append(tri)
-                        self.voxels[x][y][z].triIndices.append(triBase + count)
-                        triangle = unitTriangle(tri, fvertices, (x,y,z))
-                        uv = getUV(triangle, self.voxels[x][y][z].texture)
-                        uvs[tri[0]] = uv[0]
-                        uvs[tri[1]] = uv[1]
-                        uvs[tri[2]] = uv[2]
-                        self.voxels[x][y][z].uvs.append(uv)
-                        self.voxels[x][y][z].uvIndices.append(triBase + count)
-                        normal = getNormal(triangle)
-                        normals[tri[0]] = normal
-                        normals[tri[1]] = normal
-                        normals[tri[2]] = normal
-                        self.voxels[x][y][z].normals.append(normal)
-                        self.voxels[x][y][z].normalIndices.append(triBase + count)
-                        count += 1
-        self.initMesh(fvertices, triangles, normals, uvs)
+        self.initMesh(self.vertices, self.triangles, self.normals, self.uvs)
+        self.generated = True
 
     def initMesh(self, fvertices, triangles, normals, uvs):
         super().__init__(
@@ -88,7 +48,6 @@ class Chunk(Entity):
         )
 
     def addVoxel(self, voxel):
-        voxel.chunk = self
         pos = voxel.position
         if (pos[0] < 0 or pos[0] > 15 or pos[1] < 0 or  pos[1] > 15 or pos[2] < 0 or pos[2] > 15):
             return False
@@ -96,6 +55,20 @@ class Chunk(Entity):
         toRet = self.voxels[pos[0]][pos[1]][pos[2]] is None
         if (toRet):
             self.voxels[pos[0]][pos[1]][pos[2]] = voxel
+            if (self.generated):
+                voxel.generateSubMesh()
+                if (pos[0] != 0 and self.voxels[pos[0] - 1][pos[1]][pos[2]] is not None):
+                    self.voxels[pos[0] - 1][pos[1]][pos[2]].generateSubMesh()
+                if (pos[0] != 15 and self.voxels[pos[0] + 1][pos[1]][pos[2]] is not None):
+                    self.voxels[pos[0] + 1][pos[1]][pos[2]].generateSubMesh()
+                if (pos[1] != 0 and self.voxels[pos[0]][pos[1] - 1][pos[2]] is not None):
+                    self.voxels[pos[0]][pos[1] - 1][pos[2]].generateSubMesh()
+                if (pos[1] != 15 and self.voxels[pos[0]][pos[1] + 1][pos[2]] is not None):
+                    self.voxels[pos[0]][pos[1] + 1][pos[2]].generateSubMesh()
+                if (pos[2] != 0 and self.voxels[pos[0]][pos[1]][pos[2] - 1] is not None):
+                    self.voxels[pos[0]][pos[1]][pos[2] - 1].generateSubMesh()
+                if (pos[2] != 15 and self.voxels[pos[0]][pos[1]][pos[2] + 1] is not None):
+                    self.voxels[pos[0]][pos[1]][pos[2] + 1].generateSubMesh()
         return toRet
 
     def removeVoxel(self, pos):
@@ -103,6 +76,20 @@ class Chunk(Entity):
             return False
         toRet = self.voxels[pos[0]][pos[1]][pos[2]] is not None
         self.voxels[pos[0]][pos[1]][pos[2]] = None
+        if (toRet):
+            if (self.generated):
+                if (pos[0] != 0 and self.voxels[pos[0] - 1][pos[1]][pos[2]] is not None):
+                    self.voxels[pos[0] - 1][pos[1]][pos[2]].generateSubMesh()
+                if (pos[0] != 15 and self.voxels[pos[0] + 1][pos[1]][pos[2]] is not None):
+                    self.voxels[pos[0] + 1][pos[1]][pos[2]].generateSubMesh()
+                if (pos[1] != 0 and self.voxels[pos[0]][pos[1] - 1][pos[2]] is not None):
+                    self.voxels[pos[0]][pos[1] - 1][pos[2]].generateSubMesh()
+                if (pos[1] != 15 and self.voxels[pos[0]][pos[1] + 1][pos[2]] is not None):
+                    self.voxels[pos[0]][pos[1] + 1][pos[2]].generateSubMesh()
+                if (pos[2] != 0 and self.voxels[pos[0]][pos[1]][pos[2] - 1] is not None):
+                    self.voxels[pos[0]][pos[1]][pos[2] - 1].generateSubMesh()
+                if (pos[2] != 15 and self.voxels[pos[0]][pos[1]][pos[2] + 1] is not None):
+                    self.voxels[pos[0]][pos[1]][pos[2] + 1].generateSubMesh()
         return toRet
 
     def input(self,key):
@@ -113,7 +100,7 @@ class Chunk(Entity):
             if key == 'right mouse down':
                 punch_sound.play()
                 normal = mouse.normal
-                while (not self.addVoxel(pickBlock(block_pick)(position=pos))):
+                while (not self.addVoxel(pickBlock(block_pick)(position=pos,chunk=self))):
                     if (normal[0] > 0 or normal[1] > 0 or normal[2] > 0):
                         pos = (int(pos[0] - normal[0]), int(pos[1] - normal[1]), int(pos[2] - normal[2]))
                     else:
